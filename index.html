@@ -1,260 +1,813 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="zh-CN">
 <head>
-    <title> 爱心 </title>
     <meta charset="UTF-8">
-    <link rel="shortcut icon" href="../picture/爱心.png" type="image/x-icon">
-    <!--     github.com/he-weilai/love-code -->
-    <style>
-        html,
-body {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    background-image: url(bg1.jpg);
-    background-size: cover;
-    overflow: hidden;
-}
-
-        canvas {
-            position: absolute;
-            width: 100%;
-            height: 100%;
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>点击气球 - 趣味小游戏 | gerjin的个人网站</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#EC4899',
+                        accent: '#8B5CF6',
+                        danger: '#EF4444',
+                        success: '#10B981',
+                    },
+                    fontFamily: {
+                        game: ['"Comic Sans MS"', '"Marker Felt"', 'sans-serif'],
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .balloon {
+                @apply absolute cursor-pointer transition-all duration-300 transform hover:scale-110;
+            }
+            .bomb {
+                @apply absolute cursor-pointer transition-all duration-300 transform hover:scale-110;
+            }
+            .floating {
+                animation: floating 3s ease-in-out infinite;
+            }
+            .pulse {
+                animation: pulse 2s infinite;
+            }
+            .slide-up {
+                animation: slideUp 0.5s ease-out forwards;
+            }
+            .fade-in {
+                animation: fadeIn 0.8s ease-out forwards;
+            }
+            .blog-card-hover {
+                @apply transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
+            }
+            @keyframes floating {
+                0% { transform: translateY(0px); }
+                50% { transform: translateY(-15px); }
+                100% { transform: translateY(0px); }
+            }
+            @keyframes pulse {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.05); }
+                100% { transform: scale(1); }
+            }
+            @keyframes slideUp {
+                from { transform: translateY(50px); opacity: 0; }
+                to { transform: translateY(0); opacity: 1; }
+            }
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
         }
     </style>
-
 </head>
+<body class="bg-gradient-to-br from-blue-50 to-purple-100 min-h-screen font-sans overflow-x-hidden">
+    <!-- 首页 -->
+    <div id="home-page" class="min-h-screen flex flex-col">
+        <!-- 导航栏 -->
+        <nav class="bg-white/70 backdrop-blur-sm py-4 px-6 shadow-md sticky top-0 z-50">
+            <div class="container mx-auto flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <i class="fa fa-circle text-primary text-2xl"></i>
+                    <h1 class="text-2xl font-bold text-gray-800">气球点击 <span class="text-primary">大师</span></h1>
+                </div>
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="#home" class="text-gray-700 hover:text-primary transition-colors">首页</a>
+                    <a href="#about" class="text-gray-700 hover:text-primary transition-colors">关于作者</a>
+                    <a href="#how-to-play" class="text-gray-700 hover:text-primary transition-colors">游戏玩法</a>
+                    <a href="#blog" class="text-gray-700 hover:text-primary transition-colors">博客</a>
+                    <button id="play-now-btn" class="bg-primary hover:bg-primary/90 text-white font-bold py-2 px-6 rounded-full shadow-md hover:shadow-lg transition-all duration-300">
+                        立即开始 <i class="fa fa-play ml-1"></i>
+                    </button>
+                </div>
+                <button class="md:hidden text-gray-700 text-xl">
+                    <i class="fa fa-bars"></i>
+                </button>
+            </div>
+        </nav>
 
-<body>
-    <canvas id="pinkboard"></canvas>
+        <!-- 英雄区域 -->
+        <section id="home" class="flex-grow container mx-auto px-6 py-12 md:py-20 flex flex-col md:flex-row items-center justify-between">
+            <div class="md:w-1/2 mb-10 md:mb-0 slide-up opacity-0" style="animation-delay: 0.2s">
+                <h2 class="text-[clamp(2rem,5vw,3.5rem)] font-bold text-gray-800 leading-tight mb-6">
+                    点击气球，<br>
+                    <span class="text-primary">挑战高分</span>！
+                </h2>
+                <p class="text-gray-600 text-lg mb-8 max-w-lg">
+                    一款简单又上瘾的小游戏，测试你的反应速度和手眼协调能力。在限时内点击尽可能多的气球，避开炸弹，成为真正的气球点击大师！
+                </p>
+                <button id="start-from-home-btn" class="bg-primary hover:bg-primary/90 text-white font-bold py-3 px-8 rounded-full text-xl shadow-lg hover:shadow-xl transition-all duration-300 pulse">
+                    开始游戏 <i class="fa fa-gamepad ml-2"></i>
+                </button>
+            </div>
+            <div class="md:w-1/2 relative slide-up opacity-0" style="animation-delay: 0.5s">
+                <!-- 装饰性气球 -->
+                <div class="absolute top-10 left-10 balloon floating text-red-500" style="animation-delay: 0s">
+                    <i class="fa fa-circle text-4xl"></i>
+                    <i class="fa fa-moon-o absolute -top-3 left-1/2 transform -translate-x-1/2 text-gray-600 text-xl"></i>
+                </div>
+                <div class="absolute top-20 right-20 balloon floating text-green-500" style="animation-delay: 0.5s">
+                    <i class="fa fa-circle text-3xl"></i>
+                    <i class="fa fa-moon-o absolute -top-2 left-1/2 transform -translate-x-1/2 text-gray-600 text-sm"></i>
+                </div>
+                <div class="absolute bottom-10 left-20 balloon floating text-purple-500" style="animation-delay: 1s">
+                    <i class="fa fa-circle text-5xl"></i>
+                    <i class="fa fa-moon-o absolute -top-4 left-1/2 transform -translate-x-1/2 text-gray-600 text-xl"></i>
+                </div>
+                <div class="absolute bottom-20 right-10 balloon floating text-yellow-500" style="animation-delay: 1.5s">
+                    <i class="fa fa-circle text-3xl"></i>
+                    <i class="fa fa-moon-o absolute -top-2 left-1/2 transform -translate-x-1/2 text-gray-600 text-sm"></i>
+                </div>
+                <div class="relative z-10 bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-xl text-center">
+                    <img src="https://picsum.photos/seed/balloongame/400/300" alt="游戏截图" class="rounded-lg mx-auto mb-4 w-full max-w-md">
+                    <p class="text-gray-700 font-medium">适合所有年龄段的休闲小游戏</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 关于作者 -->
+        <section id="about" class="py-16 bg-white/50">
+            <div class="container mx-auto px-6">
+                <h2 class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold text-center text-gray-800 mb-12">
+                    <i class="fa fa-user text-primary mr-2"></i> 关于作者
+                </h2>
+                <div class="flex flex-col md:flex-row items-center gap-10">
+                    <div class="md:w-1/3 fade-in opacity-0" style="animation-delay: 0.2s">
+                        <div class="relative w-64 h-64 mx-auto">
+                            <div class="absolute inset-0 rounded-full bg-primary/20 transform rotate-3"></div>
+                            <div class="absolute inset-0 rounded-full overflow-hidden border-4 border-white shadow-lg">
+                                <img src="https://picsum.photos/seed/gerjin/300/300" alt="作者gerjin的照片" class="w-full h-full object-cover">
+                            </div>
+                        </div>
+                        <div class="text-center mt-6">
+                            <h3 class="text-2xl font-bold text-gray-800">gerjin</h3>
+                            <p class="text-primary mt-2">前端开发者 & 游戏爱好者</p>
+                            <div class="flex justify-center space-x-4 mt-4">
+                                <a href="#" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-primary hover:text-white transition-colors">
+                                    <i class="fa fa-github"></i>
+                                </a>
+                                <a href="#" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-primary hover:text-white transition-colors">
+                                    <i class="fa fa-twitter"></i>
+                                </a>
+                                <a href="#" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-primary hover:text-white transition-colors">
+                                    <i class="fa fa-linkedin"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="md:w-2/3 fade-in opacity-0" style="animation-delay: 0.4s">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">你好，我是gerjin</h3>
+                        <p class="text-gray-600 mb-4 text-lg">
+                            兴趣使然
+                        </p>
+               
+                           
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mr-3">
+                                    <i class="fa fa-code text-primary"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-gray-800">前端开发</h4>
+                                    <p class="text-gray-600 text-sm">HTML, CSS, JavaScript, React</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mr-3">
+                                    <i class="fa fa-gamepad text-primary"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-gray-800">游戏开发</h4>
+                                    <p class="text-gray-600 text-sm">Web小游戏, Canvas, Phaser</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mr-3">
+                                    <i class="fa fa-paint-brush text-primary"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-gray-800">UI/UX设计</h4>
+                                    <p class="text-gray-600 text-sm">响应式设计, 用户体验优化</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mr-3">
+                                    <i class="fa fa-pencil text-primary"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-gray-800">技术写作</h4>
+                                    <p class="text-gray-600 text-sm">教程, 博客, 技术文档</p>
+                                </div>
+                            </div>
+                        </div>
+                        <a href="#blog" class="inline-block bg-primary hover:bg-primary/90 text-white font-bold py-2 px-6 rounded-full shadow-md hover:shadow-lg transition-all duration-300">
+                            查看我的博客 <i class="fa fa-arrow-right ml-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 玩法说明 -->
+        <section id="how-to-play" class="py-16">
+            <div class="container mx-auto px-6">
+                <h2 class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold text-center text-gray-800 mb-12">
+                    <i class="fa fa-book text-primary mr-2"></i> 游戏玩法
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-shadow text-center fade-in opacity-0" style="animation-delay: 0.2s">
+                        <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fa fa-play-circle text-primary text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3 text-gray-800">开始游戏</h3>
+                        <p class="text-gray-600">点击"开始游戏"按钮，进入游戏界面，30秒倒计时开始</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-shadow text-center fade-in opacity-0" style="animation-delay: 0.4s">
+                        <div class="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fa fa-mouse-pointer text-success text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3 text-gray-800">点击气球</h3>
+                        <p class="text-gray-600">用鼠标点击漂浮的彩色气球，每个气球+10分</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-shadow text-center fade-in opacity-0" style="animation-delay: 0.6s">
+                        <div class="w-16 h-16 bg-danger/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fa fa-ban text-danger text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3 text-gray-800">避开炸弹</h3>
+                        <p class="text-gray-600">不要点击黑色炸弹，否则会扣除20分</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 博客板块 -->
+        <section id="blog" class="py-16 bg-white/50">
+            <div class="container mx-auto px-6">
+                <h2 class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold text-center text-gray-800 mb-12">
+                    <i class="fa fa-pencil text-primary mr-2"></i> 最新博客
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- 博客文章1 -->
+                    <div class="bg-white rounded-xl overflow-hidden shadow-md blog-card-hover fade-in opacity-0" style="animation-delay: 0.2s">
+                        <div class="h-48 overflow-hidden">
+                            <img src="https://picsum.photos/seed/blog1/600/400" alt="JavaScript动画教程" class="w-full h-full object-cover transition-transform duration-500 hover:scale-110">
+                        </div>
+                        <div class="p-6">
+                            <div class="flex items-center text-sm text-gray-500 mb-3">
+                                <span><i class="fa fa-calendar mr-1"></i> 2023-06-15</span>
+                                <span class="mx-3">•</span>
+                                <span><i class="fa fa-tag mr-1"></i> JavaScript</span>
+                            </div>
+                            <h3 class="text-xl font-bold mb-3 text-gray-800 hover:text-primary transition-colors">
+                                <a href="#">使用JavaScript创建流畅的动画效果</a>
+                            </h3>
+                            <p class="text-gray-600 mb-4">
+                                本文介绍了如何使用原生JavaScript创建高性能的动画效果，以及在开发"点击气球"游戏时的动画实现技巧...
+                            </p>
+                            <a href="#" class="inline-flex items-center text-primary font-medium hover:underline">
+                                阅读更多 <i class="fa fa-long-arrow-right ml-2"></i>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- 博客文章2 -->
+                    <div class="bg-white rounded-xl overflow-hidden shadow-md blog-card-hover fade-in opacity-0" style="animation-delay: 0.4s">
+                        <div class="h-48 overflow-hidden">
+                            <img src="https://picsum.photos/seed/blog2/600/400" alt="Tailwind CSS技巧" class="w-full h-full object-cover transition-transform duration-500 hover:scale-110">
+                        </div>
+                        <div class="p-6">
+                            <div class="flex items-center text-sm text-gray-500 mb-3">
+                                <span><i class="fa fa-calendar mr-1"></i> 2023-05-28</span>
+                                <span class="mx-3">•</span>
+                                <span><i class="fa fa-tag mr-1"></i> CSS</span>
+                            </div>
+                            <h3 class="text-xl font-bold mb-3 text-gray-800 hover:text-primary transition-colors">
+                                <a href="#">Tailwind CSS实用技巧分享</a>
+                            </h3>
+                            <p class="text-gray-600 mb-4">
+                                探索Tailwind CSS的高级用法，如何自定义配置，以及在游戏界面开发中如何高效使用Tailwind构建响应式布局...
+                            </p>
+                            <a href="#" class="inline-flex items-center text-primary font-medium hover:underline">
+                                阅读更多 <i class="fa fa-long-arrow-right ml-2"></i>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- 博客文章3 -->
+                    <div class="bg-white rounded-xl overflow-hidden shadow-md blog-card-hover fade-in opacity-0" style="animation-delay: 0.6s">
+                        <div class="h-48 overflow-hidden">
+                            <img src="https://picsum.photos/seed/blog3/600/400" alt="Web游戏开发" class="w-full h-full object-cover transition-transform duration-500 hover:scale-110">
+                        </div>
+                        <div class="p-6">
+                            <div class="flex items-center text-sm text-gray-500 mb-3">
+                                <span><i class="fa fa-calendar mr-1"></i> 2023-05-10</span>
+                                <span class="mx-3">•</span>
+                                <span><i class="fa fa-tag mr-1"></i> 游戏开发</span>
+                            </div>
+                            <h3 class="text-xl font-bold mb-3 text-gray-800 hover:text-primary transition-colors">
+                                <a href="#">从零开始开发Web小游戏</a>
+                            </h3>
+                            <p class="text-gray-600 mb-4">
+                                详细介绍"点击气球"游戏的开发过程，包括游戏逻辑设计、碰撞检测、分数计算和难度递增系统的实现...
+                            </p>
+                            <a href="#" class="inline-flex items-center text-primary font-medium hover:underline">
+                                阅读更多 <i class="fa fa-long-arrow-right ml-2"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center mt-10">
+                    <a href="#" class="inline-block border-2 border-primary text-primary hover:bg-primary hover:text-white font-bold py-2 px-8 rounded-full transition-all duration-300">
+                        查看所有文章 <i class="fa fa-th-large ml-2"></i>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- 行动召唤 -->
+        <section class="py-16 bg-primary/10">
+            <div class="container mx-auto px-6 text-center">
+                <h2 class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold text-gray-800 mb-6">
+                    准备好开始挑战了吗？
+                </h2>
+                <p class="text-gray-600 text-lg mb-8 max-w-2xl mx-auto">
+                    立即开始游戏，测试你的反应速度，看看你能在30秒内获得多少分数！
+                </p>
+                <button id="cta-play-btn" class="bg-primary hover:bg-primary/90 text-white font-bold py-3 px-10 rounded-full text-xl shadow-lg hover:shadow-xl transition-all duration-300 pulse">
+                    立即挑战 <i class="fa fa-rocket ml-2"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- 页脚 -->
+        <footer class="bg-gray-800 text-white py-12">
+            <div class="container mx-auto px-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                    <div>
+                        <div class="flex items-center space-x-2 mb-4">
+                            <i class="fa fa-circle text-primary text-xl"></i>
+                            <h2 class="text-xl font-bold">气球点击大师</h2>
+                        </div>
+                        <p class="text-gray-400 mb-4">
+                            一款简单有趣的休闲小游戏，由gerjin开发。
+                        </p>
+                        <div class="flex space-x-4">
+                            <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                                <i class="fa fa-facebook"></i>
+                            </a>
+                            <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                                <i class="fa fa-twitter"></i>
+                            </a>
+                            <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                                <i class="fa fa-instagram"></i>
+                            </a>
+                            <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                                <i class="fa fa-github"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold mb-4">快速链接</h3>
+                        <ul class="space-y-2">
+                            <li><a href="#home" class="text-gray-400 hover:text-white transition-colors">首页</a></li>
+                            <li><a href="#about" class="text-gray-400 hover:text-white transition-colors">关于作者</a></li>
+                            <li><a href="#how-to-play" class="text-gray-400 hover:text-white transition-colors">游戏玩法</a></li>
+                            <li><a href="#blog" class="text-gray-400 hover:text-white transition-colors">博客</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold mb-4">博客分类</h3>
+                        <ul class="space-y-2">
+                            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">JavaScript</a></li>
+                            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">CSS/Tailwind</a></li>
+                            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">游戏开发</a></li>
+                            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Web性能</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold mb-4">联系我</h3>
+                        <ul class="space-y-2">
+                            <li class="flex items-center text-gray-400">
+                                <i class="fa fa-envelope mr-2"></i>
+                                <a href="mailto:gerjin@example.com" class="hover:text-white transition-colors">gerjin@example.com</a>
+                            </li>
+                            <li class="flex items-center text-gray-400">
+                                <i class="fa fa-globe mr-2"></i>
+                                <a href="https://gerjin.dev" class="hover:text-white transition-colors">gerjin.dev</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="border-t border-gray-700 pt-8 text-center text-gray-500 text-sm">
+                    <p>© 2023 gerjin. 保留所有权利。</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- 游戏容器 -->
+    <div id="game-container" class="relative w-full h-screen hidden">
+        <!-- 游戏开始界面 -->
+        <div id="start-screen" class="absolute inset-0 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm z-30">
+            <h1 class="text-[clamp(2rem,5vw,4rem)] font-bold text-primary mb-6 text-center">点击气球</h1>
+            <p class="text-[clamp(1rem,2vw,1.5rem)] text-gray-600 mb-8 text-center max-w-md px-4">点击漂浮的气球得分，避开炸弹！随着时间推移，游戏会越来越难。</p>
+            <button id="start-btn" class="bg-primary hover:bg-primary/90 text-white font-bold py-3 px-8 rounded-full text-xl shadow-lg hover:shadow-xl transition-all duration-300 pulse">
+                开始游戏 <i class="fa fa-play ml-2"></i>
+            </button>
+            <div class="mt-8 text-gray-500">
+                <p><i class="fa fa-info-circle mr-2"></i> 点击气球 +10分 | 点击炸弹 -20分</p>
+            </div>
+        </div>
+
+        <!-- 游戏结束界面 -->
+        <div id="end-screen" class="absolute inset-0 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm z-30 hidden">
+            <h2 class="text-[clamp(1.8rem,4vw,3rem)] font-bold text-danger mb-4">游戏结束!</h2>
+            <p class="text-[clamp(1.2rem,3vw,2rem)] mb-2">最终得分: <span id="final-score" class="font-bold text-primary">0</span></p>
+            <p class="text-gray-600 mb-8">再接再厉！</p>
+            <button id="restart-btn" class="bg-success hover:bg-success/90 text-white font-bold py-3 px-8 rounded-full text-xl shadow-lg hover:shadow-xl transition-all duration-300">
+                再来一次 <i class="fa fa-refresh ml-2"></i>
+            </button>
+            <button id="back-to-home-btn" class="mt-4 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-full text-lg shadow-md hover:shadow-lg transition-all duration-300">
+                返回首页 <i class="fa fa-home ml-2"></i>
+            </button>
+        </div>
+
+        <!-- 游戏UI -->
+        <div id="game-ui" class="relative z-20 p-4 flex justify-between items-center">
+            <div class="bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-md">
+                <span class="text-gray-700 mr-2"><i class="fa fa-star text-yellow-500"></i> 分数:</span>
+                <span id="score" class="font-bold text-primary text-xl">0</span>
+            </div>
+            <div class="bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-md">
+                <span class="text-gray-700 mr-2"><i class="fa fa-clock-o text-red-500"></i> 时间:</span>
+                <span id="time" class="font-bold text-primary text-xl">30</span>
+            </div>
+            <div class="bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-md">
+                <span class="text-gray-700 mr-2"><i class="fa fa-signal text-green-500"></i> 等级:</span>
+                <span id="level" class="font-bold text-primary text-xl">1</span>
+            </div>
+        </div>
+
+        <!-- 游戏区域 -->
+        <div id="game-area" class="absolute inset-0 overflow-hidden">
+            <!-- 气球和炸弹会动态生成在这里 -->
+        </div>
+    </div>
+
     <script>
-
-        var settings = {
-            particles: {
-                length: 500,
-                duration: 2,
-                velocity: 100,
-                effect: -0.75,
-                size: 30,
-            },
+        // 页面导航控制
+        const homePage = document.getElementById('home-page');
+        const gameContainer = document.getElementById('game-container');
+        const playNowBtn = document.getElementById('play-now-btn');
+        const startFromHomeBtn = document.getElementById('start-from-home-btn');
+        const ctaPlayBtn = document.getElementById('cta-play-btn');
+        const backToHomeBtn = document.getElementById('back-to-home-btn');
+        
+        // 平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+        
+        // 导航到游戏页面
+        function goToGame() {
+            homePage.classList.add('hidden');
+            gameContainer.classList.remove('hidden');
+            // 确保游戏区域获得焦点
+            gameContainer.focus();
+            // 重置游戏状态显示
+            resetGameDisplay();
+        }
+        
+        // 返回首页
+        function goToHome() {
+            gameContainer.classList.add('hidden');
+            homePage.classList.remove('hidden');
+            // 停止任何正在进行的游戏
+            stopGame();
+        }
+        
+        // 绑定导航按钮事件
+        playNowBtn.addEventListener('click', goToGame);
+        startFromHomeBtn.addEventListener('click', goToGame);
+        ctaPlayBtn.addEventListener('click', goToGame);
+        backToHomeBtn.addEventListener('click', goToHome);
+        
+        // 游戏状态变量
+        let score = 0;
+        let timeLeft = 30;
+        let level = 1;
+        let gameInterval;
+        let spawnInterval;
+        let isGameRunning = false;
+        
+        // DOM元素
+        const startScreen = document.getElementById('start-screen');
+        const endScreen = document.getElementById('end-screen');
+        const gameArea = document.getElementById('game-area');
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const scoreDisplay = document.getElementById('score');
+        const timeDisplay = document.getElementById('time');
+        const levelDisplay = document.getElementById('level');
+        const finalScoreDisplay = document.getElementById('final-score');
+        
+        // 气球颜色
+        const balloonColors = [
+            'text-red-500',
+            'text-blue-500',
+            'text-green-500',
+            'text-yellow-500',
+            'text-purple-500',
+            'text-pink-500',
+            'text-orange-500'
+        ];
+        
+        // 开始游戏
+        startBtn.addEventListener('click', startGame);
+        restartBtn.addEventListener('click', restartGame);
+        
+        function startGame() {
+            // 重置游戏状态
+            score = 0;
+            timeLeft = 30;
+            level = 1;
+            updateScore();
+            updateTime();
+            updateLevel();
+            
+            // 隐藏开始界面
+            startScreen.classList.add('hidden');
+            
+            // 开始游戏计时
+            isGameRunning = true;
+            gameInterval = setInterval(updateGame, 1000);
+            
+            // 开始生成气球和炸弹
+            spawnBalloon();
+            spawnInterval = setInterval(spawnBalloon, 1500);
+        }
+        
+        function stopGame() {
+            // 停止游戏
+            isGameRunning = false;
+            clearInterval(gameInterval);
+            clearInterval(spawnInterval);
+            
+            // 清除所有气球和炸弹
+            const elements = gameArea.querySelectorAll('.balloon, .bomb');
+            elements.forEach(el => el.remove());
+        }
+        
+        function endGame() {
+            stopGame();
+            
+            // 显示结束界面
+            finalScoreDisplay.textContent = score;
+            endScreen.classList.remove('hidden');
+        }
+        
+        function restartGame() {
+            // 隐藏结束界面
+            endScreen.classList.add('hidden');
+            
+            // 重新开始游戏
+            startGame();
+        }
+        
+        function resetGameDisplay() {
+            // 重置游戏显示
+            score = 0;
+            timeLeft = 30;
+            level = 1;
+            updateScore();
+            updateTime();
+            updateLevel();
+            
+            // 显示开始界面，隐藏结束界面
+            endScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+            
+            // 清除所有气球和炸弹
+            const elements = gameArea.querySelectorAll('.balloon, .bomb');
+            elements.forEach(el => el.remove());
+        }
+        
+        function updateGame() {
+            // 更新时间
+            timeLeft--;
+            updateTime();
+            
+            // 检查游戏是否结束
+            if (timeLeft <= 0) {
+                endGame();
+                return;
+            }
+            
+            // 每10秒提升一级难度
+            if (timeLeft % 10 === 0) {
+                level++;
+                updateLevel();
+                
+                // 提高难度 - 缩短生成间隔
+                clearInterval(spawnInterval);
+                const newInterval = Math.max(500, 1500 - (level - 1) * 150);
+                spawnInterval = setInterval(spawnBalloon, newInterval);
+            }
+            
+            // 移动所有气球和炸弹
+            moveElements();
+        }
+        
+        function spawnBalloon() {
+            if (!isGameRunning) return;
+            
+            // 随机决定生成气球还是炸弹 (80%气球，20%炸弹)
+            const isBomb = Math.random() < 0.2;
+            
+            if (isBomb) {
+                spawnBomb();
+            } else {
+                // 生成气球
+                const balloon = document.createElement('div');
+                const color = balloonColors[Math.floor(Math.random() * balloonColors.length)];
+                const size = Math.floor(Math.random() * 3) + 3; // 3-5 rem
+                
+                // 随机水平位置
+                const gameWidth = gameArea.offsetWidth;
+                const leftPos = Math.random() * (gameWidth - 60) + 20; // 避免超出屏幕
+                
+                // 设置气球样式
+                balloon.className = `balloon ${color}`;
+                balloon.style.bottom = '-100px';
+                balloon.style.left = `${leftPos}px`;
+                balloon.innerHTML = `<i class="fa fa-circle" style="font-size: ${size}rem;"></i><i class="fa fa-moon-o absolute -top-4 left-1/2 transform -translate-x-1/2 text-gray-600" style="font-size: ${size * 0.3}rem;"></i>`;
+                
+                // 点击气球加分
+                balloon.addEventListener('click', () => {
+                    score += 10;
+                    updateScore();
+                    balloon.remove();
+                    
+                    // 添加点击效果
+                    createPopEffect(balloon, 'success');
+                });
+                
+                gameArea.appendChild(balloon);
+            }
+        }
+        
+        function spawnBomb() {
+            const bomb = document.createElement('div');
+            const size = Math.floor(Math.random() * 2) + 3; // 3-4 rem
+            
+            // 随机水平位置
+            const gameWidth = gameArea.offsetWidth;
+            const leftPos = Math.random() * (gameWidth - 60) + 20;
+            
+            // 设置炸弹样式
+            bomb.className = 'bomb text-gray-800';
+            bomb.style.bottom = '-100px';
+            bomb.style.left = `${leftPos}px`;
+            bomb.innerHTML = `<i class="fa fa-bomb" style="font-size: ${size}rem;"></i>`;
+            
+            // 点击炸弹减分
+            bomb.addEventListener('click', () => {
+                score = Math.max(0, score - 20); // 确保分数不会为负
+                updateScore();
+                bomb.remove();
+                
+                // 添加点击效果
+                createPopEffect(bomb, 'danger');
+            });
+            
+            gameArea.appendChild(bomb);
+        }
+        
+        function moveElements() {
+            const elements = gameArea.querySelectorAll('.balloon, .bomb');
+            const gameHeight = gameArea.offsetHeight;
+            
+            elements.forEach(el => {
+                // 获取当前位置
+                const currentBottom = parseFloat(el.style.bottom);
+                
+                // 移动速度随等级增加
+                const speed = 20 + (level - 1) * 5;
+                
+                // 更新位置
+                el.style.bottom = `${currentBottom + speed}px`;
+                
+                // 如果元素超出屏幕顶部，移除它
+                if (currentBottom > gameHeight) {
+                    el.remove();
+                }
+            });
+        }
+        
+        function createPopEffect(element, type) {
+            // 创建爆炸效果
+            const pop = document.createElement('div');
+            const colorClass = type === 'success' ? 'text-success' : 'text-danger';
+            const icon = type === 'success' ? 'fa-check' : 'fa-exclamation-triangle';
+            
+            pop.className = `absolute ${colorClass} animate-ping`;
+            pop.style.left = element.style.left;
+            pop.style.bottom = element.style.bottom;
+            pop.innerHTML = `<i class="fa ${icon}" style="font-size: 2rem;"></i>`;
+            
+            gameArea.appendChild(pop);
+            
+            // 短暂延迟后移除效果
+            setTimeout(() => {
+                pop.remove();
+            }, 500);
+        }
+        
+        // 更新显示
+        function updateScore() {
+            scoreDisplay.textContent = score;
+            
+            // 添加分数变化动画
+            scoreDisplay.classList.add('scale-125', 'text-primary/80');
+            setTimeout(() => {
+                scoreDisplay.classList.remove('scale-125', 'text-primary/80');
+            }, 300);
+        }
+        
+        function updateTime() {
+            timeDisplay.textContent = timeLeft;
+            
+            // 时间不多时添加警告效果
+            if (timeLeft <= 10) {
+                timeDisplay.classList.add('text-danger', 'font-bold');
+            } else {
+                timeDisplay.classList.remove('text-danger', 'font-bold');
+            }
+        }
+        
+        function updateLevel() {
+            levelDisplay.textContent = level;
+        }
+        
+        // 响应窗口大小变化
+        window.addEventListener('resize', () => {
+            // 移除即将超出屏幕的元素
+            const elements = gameArea.querySelectorAll('.balloon, .bomb');
+            const gameWidth = gameArea.offsetWidth;
+            
+            elements.forEach(el => {
+                const leftPos = parseFloat(el.style.left);
+                if (leftPos > gameWidth - 40) {
+                    el.remove();
+                }
+            });
+        });
+        
+        // 页面加载完成后触发动画
+        window.addEventListener('load', () => {
+            // 触发首页动画
+            setTimeout(() => {
+                document.querySelectorAll('.slide-up, .fade-in').forEach(el => {
+                    el.style.opacity = '1';
+                });
+            }, 100);
+        });
+        
+        // 滚动时的动画效果
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.1
         };
-
-
-        (function () { var b = 0; var c = ["ms", "moz", "webkit", "o"]; for (var a = 0; a < c.length && !window.requestAnimationFrame; ++a) { window.requestAnimationFrame = window[c[a] + "RequestAnimationFrame"]; window.cancelAnimationFrame = window[c[a] + "CancelAnimationFrame"] || window[c[a] + "CancelRequestAnimationFrame"] } if (!window.requestAnimationFrame) { window.requestAnimationFrame = function (h, e) { var d = new Date().getTime(); var f = Math.max(0, 16 - (d - b)); var g = window.setTimeout(function () { h(d + f) }, f); b = d + f; return g } } if (!window.cancelAnimationFrame) { window.cancelAnimationFrame = function (d) { clearTimeout(d) } } }());
-
-
-        var Point = (function () {
-            function Point(x, y) {
-                this.x = (typeof x !== 'undefined') ? x : 0;
-                this.y = (typeof y !== 'undefined') ? y : 0;
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('opacity-100');
+                    entry.target.classList.remove('opacity-0');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+        
+        document.querySelectorAll('.fade-in, .slide-up').forEach(el => {
+            if (el.style.opacity !== '1') {
+                observer.observe(el);
             }
-            Point.prototype.clone = function () {
-                return new Point(this.x, this.y);
-            };
-            Point.prototype.length = function (length) {
-                if (typeof length == 'undefined')
-                    return Math.sqrt(this.x * this.x + this.y * this.y);
-                this.normalize();
-                this.x *= length;
-                this.y *= length;
-                return this;
-            };
-            Point.prototype.normalize = function () {
-                var length = this.length();
-                this.x /= length;
-                this.y /= length;
-                return this;
-            };
-            return Point;
-        })();
-
-
-        var Particle = (function () {
-            function Particle() {
-                this.position = new Point();
-                this.velocity = new Point();
-                this.acceleration = new Point();
-                this.age = 0;
-            }
-            Particle.prototype.initialize = function (x, y, dx, dy) {
-                this.position.x = x;
-                this.position.y = y;
-                this.velocity.x = dx;
-                this.velocity.y = dy;
-                this.acceleration.x = dx * settings.particles.effect;
-                this.acceleration.y = dy * settings.particles.effect;
-                this.age = 0;
-            };
-            Particle.prototype.update = function (deltaTime) {
-                this.position.x += this.velocity.x * deltaTime;
-                this.position.y += this.velocity.y * deltaTime;
-                this.velocity.x += this.acceleration.x * deltaTime;
-                this.velocity.y += this.acceleration.y * deltaTime;
-                this.age += deltaTime;
-            };
-            Particle.prototype.draw = function (context, image) {
-                function ease(t) {
-                    return (--t) * t * t + 1;
-                }
-                var size = image.width * ease(this.age / settings.particles.duration);
-                context.globalAlpha = 1 - this.age / settings.particles.duration;
-                context.drawImage(image, this.position.x - size / 2, this.position.y - size / 2, size, size);
-            };
-            return Particle;
-        })();
-
-
-        var ParticlePool = (function () {
-            var particles,
-                firstActive = 0,
-                firstFree = 0,
-                duration = settings.particles.duration;
-
-            function ParticlePool(length) {
-
-                particles = new Array(length);
-                for (var i = 0; i < particles.length; i++)
-                    particles[i] = new Particle();
-            }
-            ParticlePool.prototype.add = function (x, y, dx, dy) {
-                particles[firstFree].initialize(x, y, dx, dy);
-
-                firstFree++;
-                if (firstFree == particles.length) firstFree = 0;
-                if (firstActive == firstFree) firstActive++;
-                if (firstActive == particles.length) firstActive = 0;
-            };
-            ParticlePool.prototype.update = function (deltaTime) {
-                var i;
-
-
-                if (firstActive < firstFree) {
-                    for (i = firstActive; i < firstFree; i++)
-                        particles[i].update(deltaTime);
-                }
-                if (firstFree < firstActive) {
-                    for (i = firstActive; i < particles.length; i++)
-                        particles[i].update(deltaTime);
-                    for (i = 0; i < firstFree; i++)
-                        particles[i].update(deltaTime);
-                }
-
-
-                while (particles[firstActive].age >= duration && firstActive != firstFree) {
-                    firstActive++;
-                    if (firstActive == particles.length) firstActive = 0;
-                }
-
-
-            };
-            ParticlePool.prototype.draw = function (context, image) {
-
-                if (firstActive < firstFree) {
-                    for (i = firstActive; i < firstFree; i++)
-                        particles[i].draw(context, image);
-                }
-                if (firstFree < firstActive) {
-                    for (i = firstActive; i < particles.length; i++)
-                        particles[i].draw(context, image);
-                    for (i = 0; i < firstFree; i++)
-                        particles[i].draw(context, image);
-                }
-            };
-            return ParticlePool;
-        })();
-
-
-        (function (canvas) {
-            var context = canvas.getContext('2d'),
-                particles = new ParticlePool(settings.particles.length),
-                particleRate = settings.particles.length / settings.particles.duration,
-                time;
-
-
-            function pointOnHeart(t) {
-                return new Point(
-                    160 * Math.pow(Math.sin(t), 3),
-                    130 * Math.cos(t) - 50 * Math.cos(2 * t) - 20 * Math.cos(3 * t) - 10 * Math.cos(4 * t) + 25
-                );
-            }
-
-
-            var image = (function () {
-                var canvas = document.createElement('canvas'),
-                    context = canvas.getContext('2d');
-                canvas.width = settings.particles.size;
-                canvas.height = settings.particles.size;
-
-                function to(t) {
-                    var point = pointOnHeart(t);
-                    point.x = settings.particles.size / 2 + point.x * settings.particles.size / 350;
-                    point.y = settings.particles.size / 2 - point.y * settings.particles.size / 350;
-                    return point;
-                }
-
-                context.beginPath();
-                var t = -Math.PI;
-                var point = to(t);
-                context.moveTo(point.x, point.y);
-                while (t < Math.PI) {
-                    t += 0.01;
-                    point = to(t);
-                    context.lineTo(point.x, point.y);
-                }
-                context.closePath();
-
-                context.fillStyle = '#ea80b0';
-                context.fill();
-
-                var image = new Image();
-                image.src = canvas.toDataURL();
-                return image;
-            })();
-
-
-            function render() {
-
-                requestAnimationFrame(render);
-
-
-                var newTime = new Date().getTime() / 1000,
-                    deltaTime = newTime - (time || newTime);
-                time = newTime;
-
-
-                context.clearRect(0, 0, canvas.width, canvas.height);
-
-
-                var amount = particleRate * deltaTime;
-                for (var i = 0; i < amount; i++) {
-                    var pos = pointOnHeart(Math.PI - 2 * Math.PI * Math.random());
-                    var dir = pos.clone().length(settings.particles.velocity);
-                    particles.add(canvas.width / 2 + pos.x, canvas.height / 2 - pos.y, dir.x, -dir.y);
-                }
-
-
-                particles.update(deltaTime);
-                particles.draw(context, image);
-            }
-
-
-            function onResize() {
-                canvas.width = canvas.clientWidth;
-                canvas.height = canvas.clientHeight;
-            }
-            window.onresize = onResize;
-
-
-            setTimeout(function () {
-                onResize();
-                render();
-            }, 10);
-        })(document.getElementById('pinkboard'));
+        });
     </script>
-
-
-
 </body>
-
 </html>
